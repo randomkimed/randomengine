@@ -1,10 +1,10 @@
-# randomengine.utils > quaternion
+# randomengine.math > quaternion
 
-from randomengine.utils.mathf import Mathf
-from randomengine.utils.vector import Vector3
+from randomengine.math.mathf import Mathf
+from randomengine.math.vector import Vector3
 
 class Quaternion:
-    """radomengine.utils.quaternion"""
+    """radomengine.math.quaternion"""
 
     def __init__(self, x: float, y: float, z: float, w: float):
         self.x, self.y, self.z, self.w = x, y, z, w
@@ -50,7 +50,7 @@ class Quaternion:
 
     def __truediv__(self, o):
         if isinstance(o, (int, float)):
-            if o is 0: return Quaternion.identity
+            if o == 0: return Quaternion.identity
             return Quaternion(self.x / o, self.y / o, self.z / o, self.w / o)
         elif isinstance(o, Quaternion):
             return self * o.inverse
@@ -77,7 +77,7 @@ class Quaternion:
     @property
     def normalized(self):
         m = self.magnitude
-        if m is 0: return Quaternion.identity
+        if m == 0: return Quaternion.identity
         return self / self.magnitude
 
     def normalize(self):
@@ -89,7 +89,7 @@ class Quaternion:
     
     @property
     def inverse(self):
-        if self.sqrMagnitude is 0: return Quaternion.identity
+        if self.sqrMagnitude == 0: return Quaternion.identity
         return self.conjugate / self.sqrMagnitude
     
     def invert(self):

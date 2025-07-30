@@ -1,9 +1,9 @@
-# randomengine.utils > mathf
+# randomengine.math > mathf
 
 import math
 
 class Mathf:
-    """randomengine.utils.mathf"""
+    """randomengine.math.mathf"""
 
     @staticmethod
     def lerp(a: float, b: float, t: float) -> float:
@@ -76,5 +76,5 @@ class Mathf:
         return math.degrees(r)
     
     PI = math.pi
-    RADIANS = PI / 180
-    DEGREES = 180 / PI
+    TO_RADIANS = PI / 180
+    TO_DEGREES = 180 / PI

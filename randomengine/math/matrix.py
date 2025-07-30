@@ -1,16 +1,13 @@
-# randomengine.utils > transform
+# randomengine.math > matrix
 
 import math
 import copy
 
-from randomengine.core.modifier import Modifier
-
-from randomengine.utils.mathf import Mathf
-from randomengine.utils.vector import Vector3
-from randomengine.utils.quaternion import Quaternion
+from randomengine.math.vector import Vector3
+from randomengine.math.quaternion import Quaternion
 
 class Matrix: # if you're wondering why its not called Matrix4x4 or Matrix4, it's because i'm only doing this once and SPECIFICALLY for transformation matrices.
-    """randomengine.utils.matrix"""
+    """randomengine.math.matrix"""
 
     IDENTITY = ...
     
@@ -58,7 +55,7 @@ class Matrix: # if you're wondering why its not called Matrix4x4 or Matrix4, it'
         return "Matrix(\n  " + ",\n  ".join(row_strs) + "\n)"
     
     def __eq__(self, o):
-        pass
+        return isinstance(o, Matrix) and self.elements == o.elements
 
     @property
     def inverse(self):
@@ -77,8 +74,8 @@ class Matrix: # if you're wondering why its not called Matrix4x4 or Matrix4, it'
                         id[i], id[j] = id[j], id[i]
                         pivot = m[i][i]
                         break
-            else:
-                raise ValueError("Matrix is not invertible")
+                    else:
+                        raise ValueError("Matrix is not invertible")
             
             # normalize row
             for j in range(4):
@@ -99,7 +96,7 @@ class Matrix: # if you're wondering why its not called Matrix4x4 or Matrix4, it'
     
     def invert(self):
         # sets the current matrix to its inverse
-        self.elements = copy.copy(self.inverse.elements)
+        self.elements = copy.deepcopy(self.inverse.elements)
 
     def __inverse__(self):
         return self.inverse
@@ -192,7 +189,7 @@ class Matrix: # if you're wondering why its not called Matrix4x4 or Matrix4, it'
         R = Quaternion.Matrix(
             Matrix([
                 [self[0, 0] / S.x, self[0, 1] / S.y, self[0, 2] / S.z, 0],
-                [self[1, 0] / S.x, self[1, 1] / S.y, self[1, 2] / S.z, 0]
+                [self[1, 0] / S.x, self[1, 1] / S.y, self[1, 2] / S.z, 0],
                 [self[2, 0] / S.x, self[2, 1] / S.y, self[2, 2] / S.z, 0],
                 [0, 0, 0, 1]
             ])
@@ -206,30 +203,3 @@ Matrix.IDENTITY = Matrix([
         [0, 0, 1, 0],
         [0, 0, 0, 1]
     ])
-
-class Transform(Modifier):
-    """randomengine.utils.transform"""
-    def __init__(self, position = Vector3.ZERO, rotation = Quaternion.IDENTITY, scale = Vector3.ONE):
-        super().__init__()
-        self.local_position = position
-        self.local_rotation = rotation
-        self.local_scale = scale
-        self.matrix = Matrix.IDENTITY
-
-    @property
-    def position(self):
-        return self.matrix.split()[0]
-    
-    @property
-    def rotation(self):
-        return self.matrix.split()[1]
-
-    @property
-    def scale(self):
-        return self.matrix.split()[2]
-
-    def UPDATE(self):
-        t = Matrix.Translation(self.position)
-        r = Matrix.Rotation(self.rotation)
-        s = Matrix.Scale(self.scale)
-        self.matrix = t * r * s

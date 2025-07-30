@@ -1,6 +1,6 @@
-# randomengine.core > vector
+# randomengine.math > vector
 
-from randomengine.core.mathf import Mathf
+from randomengine.math.mathf import Mathf
 
 class Vector2:
     """randomengine.math.vector2"""
@@ -38,7 +38,7 @@ class Vector2:
 
     def __truediv__(self, o):
         o = toVector2(o)
-        if o.magnitude is 0: return Vector2.ZERO
+        if o.magnitude == 0: return Vector2.ZERO
         else:
             return Vector2(self.x / o.x, self.y / o.y)
 
@@ -209,7 +209,7 @@ Vector3.UP = Vector3(1, 0)
 Vector3.DOWN = Vector3(-1, 0)
 
 class Vector4:
-    """randomengine.utils.vector4"""
+    """randomengine.math.vector4"""
 
     def __init__(self, x, y = None, z = None, w = None):
         self.x = x
@@ -245,7 +245,7 @@ class Vector4:
 
     def __truediv__(self, o):
         o = toVector4(o)
-        if o.magnitude is 0: return Vector4.ZERO
+        if o.magnitude == 0: return Vector4.ZERO
         else:
             return Vector4(self.x / o.x, self.y / o.y, self.z / o.z, self.w / o.w)
 
