@@ -1,6 +1,6 @@
 # randomengine.math > transform
 
-from randomengine.core.modifier import Modifier
+from randomengine.core.object import Modifier
 
 from randomengine.math.vector import Vector3
 from randomengine.math.quaternion import Quaternion
@@ -10,89 +10,103 @@ class Transform(Modifier):
     """randomengine.math.transform"""
     def __init__(self, position = Vector3.ZERO, rotation = Quaternion.IDENTITY, scale = Vector3.ONE):
         super().__init__()
-        self.__local_position = position
-        self.__local_rotation = rotation
-        self.__local_scale = scale
+        self.__local: list[Vector3, Quaternion, Vector3] = [position, rotation, scale] # local position cache
+        self.__global: list[Vector3, Quaternion, Vector3] = [None, None, None] # global position cache
         self.matrix = Matrix.IDENTITY
+
+        self.DIRTY('matrix', 'global')
 
     # Local Transforms
 
-    @property # POSITION
-    def local_position(self) -> Vector3:
-        return self.__local_position
+    @property
+    def local_position(self) -> Vector3: return self.__local[0]
 
     @local_position.setter
     def local_position(self, v):
-        self.__local_position = v
-        self.DIRTY('matrix')
+        self.__local[0] = v
+        self.DIRTY('matrix', 'global')
     
-    @property # ROTATION
-    def local_rotation(self) -> Quaternion:
-        return self.__local_rotation
+    @property
+    def local_rotation(self) -> Quaternion: return self.__local[1]
     
     @local_rotation.setter
     def local_rotation(self, v):
-        self.__local_rotation = v
-        self.DIRTY('matrix')
+        self.__local[1] = v
+        self.DIRTY('matrix', 'global')
     
-    @property # SCALE
-    def local_scale(self) -> Vector3:
-        return self.__local_scale
+    @property
+    def local_scale(self) -> Vector3: return self.__local[2]
     
     @local_scale.setter
     def local_scale(self, v):
-        self.__local_scale = v
-        self.DIRTY('matrix')
+        self.__local[2] = v
+        self.DIRTY('matrix', 'global')
     
     # Global Transforms
 
     @property
-    def position(self) -> Vector3: # POSITION
-        return self.__local_position
-    
+    def position(self):
+        self.__update_globals() # will only execute if DIRTY becaues of the @
+        return self.__global[0]
+
     @position.setter
     def position(self, v):
-        self.local_position = v
-    
+        self.DIRTY('globals')
+        self.local_position = v - self.parent.position if self.parent is not None else v
+
     @property
-    def rotation(self) -> Quaternion: # ROTATION
-        return self.__local_rotation
-    
+    def rotation(self):
+        self.__update_globals()
+        return self.__global[1]
+
     @rotation.setter
     def rotation(self, v):
-        self.local_rotation = v
+        self.DIRTY('globals')
+        self.local_rotation = v - self.parent.rotation if self.parent is not None else v
 
     @property
-    def scale(self) -> Vector3: # SCALE
-        return self.__local_scale
-    
-    @scale.setter
+    def scale(self):
+        self.__update_globals()
+        return self.__global[2]
+
+    @position.setter
     def scale(self, v):
-        self.local_scale = v
+        self.DIRTY('globals')
+        self.local_scale = v - self.parent.scale if self.parent is not None else v
 
-    # Local and World Space Conversions
+    # Hierarchy stuff
 
     @property
-    def parent(self) -> Transform | None:
+    def parent(self) -> "Transform" | None:
         if self.owner is None or self.owner.parent is None:
             return None
         return self.owner.parent.get(Transform)
 
-    def localize(self, v: Vector3 | Quaternion) -> Vector3 | Quaternion:
-        if self.parent is None:
-            return v
+    # Coordinate Space Conversions and Caching
 
-    def globalize(self, v: Vector3 | Quaternion) -> Vector3 | Quaternion:
-        pass
+    @Modifier.DIRTY_UPDATE('global')
+    def __update_globals(self):
+        if self.parent is None:
+            self.__global = [
+                self.local_position,
+                self.local_rotation,
+                self.local_scale
+            ]
+        else:
+            self.__global = [
+                self.parent.position + self.local_position,
+                self.parent.rotation * self.local_rotation,
+                self.parent.scale * self.local_scale
+            ]
     
-    # Matrix Math
+    # Matrix math
     
     @Modifier.DIRTY_UPDATE('matrix')
     def __update_matrix(self):
-        t = Matrix.Translation(self.position)
-        r = Matrix.Rotation(self.rotation)
-        s = Matrix.Scale(self.scale)
-        self.matrix = t * r * s
+        T = Matrix.Translation(self.position)
+        R = Matrix.Rotation(self.rotation)
+        S = Matrix.Scale(self.scale)
+        self.matrix = T * R * S
 
     def UPDATE(self):
         self.__update_matrix()

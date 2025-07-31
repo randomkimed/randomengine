@@ -1,8 +1,7 @@
 # randomengine.core > object
 
 from typing import TypeVar, Type, Optional
-
-from randomengine.core.modifier import Modifier
+from functools import wraps
 
 from randomengine.math.vector import Vector3
 from randomengine.math.quaternion import Quaternion
@@ -10,9 +9,57 @@ from randomengine.math.transform import Transform
 
 from randomengine.rendering.model import Model
 
+class Modifier:
+    """randomengine.core.modifier"""
+
+    def __init__(self):
+        self.owner: Object = None
+        self.__dirty = set()
+
+    def START(self):
+        pass
+
+    def AWAKE(self):
+        pass
+
+    def UPDATE(self):
+        pass
+
+    def LATE_UPDATE(self):
+        pass
+
+    def FIXED_UPDATE(self):
+        pass
+
+    def EXIT(self):
+        pass
+
+    def DIRTY(self, *fields: str):
+        self.__dirty.update(fields)
+
+    def IS_DIRTY(self, field: str):
+        return field in self.__dirty
+
+    @staticmethod
+    def DIRTY_UPDATE(*fields: str, strict: bool = False):
+        def decorator(method):
+            @wraps(method)
+            def wrapper(self, *args, **kwargs):
+                check = [self.IS_DIRTY(field) for field in fields]
+                dirty = all(check) if strict else any(check)
+
+                if dirty:
+                    result = self.func(*args, **kwargs)
+                    self.__dirty.difference_update(fields)
+                    return result
+            return wrapper
+        return decorator
+
 M = TypeVar('M', bound=Modifier)
 
 class Object:
+    """randomengine.core.object"""
+    
     def __init__(
             self,
             name: str = "New Object",

@@ -1,5 +1,7 @@
 # randomengine.math > quaternion
 
+import copy
+
 from randomengine.math.mathf import Mathf
 from randomengine.math.vector import Vector3
 
@@ -93,7 +95,7 @@ class Quaternion:
         return self.conjugate / self.sqrMagnitude
     
     def invert(self):
-        q = self.inverse
+        q = copy.deepcopy(self.inverse)
         self.x, self.y, self.z, self.w = q.x, q.y, q.z, q.w
 
     @property
